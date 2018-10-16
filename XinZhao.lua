@@ -3,7 +3,7 @@ if myHero.charName ~= "XinZhao" then return end
 -- [ update ]
 do
     
-    local Version = 1
+    local Version = 2
     
     local Files = {
         Lua = {
@@ -240,6 +240,17 @@ function GetEnemyHeroes()
     return EnemyHeroes
 end
 
+function GetAllyHeroes()
+    EnemyHeroes = {}
+    for i = 1, Game.HeroCount() do
+        local Hero = Game.Hero(i)
+        if Hero.isAlly then
+            table.insert(EnemyHeroes, Hero)
+        end
+    end
+    return EnemyHeroes
+end
+
 function IsUnderTurret(unit)
     for i = 1, Game.TurretCount() do
         local turret = Game.Turret(i);
@@ -385,6 +396,9 @@ local RIcon = "https://vignette.wikia.nocookie.net/leagueoflegends/images/c/c0/C
 local SmiteIcon = "https://vignette.wikia.nocookie.net/leagueoflegends/images/0/05/Smite.png"
 local TiamatIcon = "https://vignette.wikia.nocookie.net/leagueoflegends/images/e/e3/Tiamat_item.png"
 local THydraIcon = "https://vignette.wikia.nocookie.net/leagueoflegends/images/2/22/Titanic_Hydra_item.png"
+local RHydraIcon = "https://vignette.wikia.nocookie.net/leagueoflegends/images/e/e8/Ravenous_Hydra_item.png"
+local BCIcon = "https://vignette.wikia.nocookie.net/leagueoflegends/images/4/44/Bilgewater_Cutlass_item.png"
+local HGIcon = "https://vignette.wikia.nocookie.net/leagueoflegends/images/6/64/Hextech_Gunblade_item.png"
 
 function TiamatDMG()--3077
     return 100
@@ -394,7 +408,13 @@ function THydraDMG()--3748
     return 200
 end
 
-local Version, Author, LVersion = "v1", "miragessee", "8.18"
+function GunbladeDMG() --3146
+    local level = myHero.levelData.lvl
+    local damage = ({175,180,184,189,193,198,203,207,212,216,221,225,230,235,239,244,248,253})[level] + 0.30 * myHero.ap
+	return damage
+end
+
+local Version, Author, LVersion = "v2", "miragessee", "8.20"
 
 function XinZhao:LoadMenu()
     
@@ -419,6 +439,9 @@ function XinZhao:LoadMenu()
     self.XinZhaoMenu.Combo:MenuElement({id = "UseSmite", name = "Use smite", value = true, leftIcon = SmiteIcon})
     self.XinZhaoMenu.Combo:MenuElement({id = "UseT", name = "Use Tiamat", value = true, leftIcon = TiamatIcon})
     self.XinZhaoMenu.Combo:MenuElement({id = "UseTH", name = "Use Titanic Hydra", value = true, leftIcon = THydraIcon})
+    self.XinZhaoMenu.Combo:MenuElement({id = "UseRH", name = "Use Ravenous Hydra", value = true, leftIcon = RHydraIcon})
+    self.XinZhaoMenu.Combo:MenuElement({id = "UseBC", name = "Use Bilgewater Cutlass", value = true, leftIcon = BCIcon})
+    self.XinZhaoMenu.Combo:MenuElement({id = "UseHG", name = "Use Hextech Gunblade", value = true, leftIcon = HGIcon})
     
     self.XinZhaoMenu:MenuElement({id = "KillSteal", name = "KillSteal", type = MENU})
     self.XinZhaoMenu.KillSteal:MenuElement({id = "UseQ", name = "Use Q", value = true, leftIcon = QIcon})
@@ -428,6 +451,8 @@ function XinZhao:LoadMenu()
     self.XinZhaoMenu.KillSteal:MenuElement({id = "UseIgnite", name = "Use Ignite", value = true, leftIcon = IgniteIcon})
     self.XinZhaoMenu.KillSteal:MenuElement({id = "UseT", name = "Use Tiamat", value = true, leftIcon = TiamatIcon})
     self.XinZhaoMenu.KillSteal:MenuElement({id = "UseTH", name = "Use Titanic Hydra", value = true, leftIcon = THydraIcon})
+    self.XinZhaoMenu.KillSteal:MenuElement({id = "UseRH", name = "Use Ravenous Hydra", value = true, leftIcon = RHydraIcon})
+    self.XinZhaoMenu.KillSteal:MenuElement({id = "UseHG", name = "Use Hextech Gunblade", value = true, leftIcon = HGIcon})
     
     self.XinZhaoMenu:MenuElement({id = "Clear", name = "Clear", type = MENU})
     self.XinZhaoMenu.Clear:MenuElement({id = "UseQ", name = "Use Q", value = true, leftIcon = QIcon})
@@ -435,9 +460,11 @@ function XinZhao:LoadMenu()
     self.XinZhaoMenu.Clear:MenuElement({id = "UseE", name = "Use E", value = true, leftIcon = EIcon})
     self.XinZhaoMenu.Clear:MenuElement({id = "UseT", name = "Use Tiamat", value = true, leftIcon = TiamatIcon})
     self.XinZhaoMenu.Clear:MenuElement({id = "UseTH", name = "Use Titanic Hydra", value = true, leftIcon = THydraIcon})
+    self.XinZhaoMenu.Clear:MenuElement({id = "UseRH", name = "Use Ravenous Hydra", value = true, leftIcon = RHydraIcon})
     
     self.XinZhaoMenu:MenuElement({id = "AutoLevel", name = "AutoLevel", type = MENU})
-    self.XinZhaoMenu.AutoLevel:MenuElement({id = "AutoLevel", name = "First E->Q->W then W->Q->E", value = true})
+    self.XinZhaoMenu.AutoLevel:MenuElement({id = "AutoLevel", name = "First E->Q->W then W->Q->E", value = false})
+    self.XinZhaoMenu.AutoLevel:MenuElement({id = "AutoLevel2", name = "E->Q->W", value = true})
     
     self.XinZhaoMenu:MenuElement({id = "Drawings", name = "Drawings", type = MENU})
     self.XinZhaoMenu.Drawings:MenuElement({id = "DrawQ", name = "Draw Q Range", value = true})
@@ -448,6 +475,9 @@ function XinZhao:LoadMenu()
     self.XinZhaoMenu.Drawings:MenuElement({id = "DrawJng", name = "Draw Jungler Info", value = true})
     self.XinZhaoMenu.Drawings:MenuElement({id = "DrawKS", name = "Draw Killable Skills Info", value = true})
     self.XinZhaoMenu.Drawings:MenuElement({id = "DrawKillable", name = "Draw Killable Enemy Info", value = true})
+    self.XinZhaoMenu.Drawings:MenuElement({id = "DrawTF", name = "Draw Team Fight Info", value = true})
+    self.XinZhaoMenu.Drawings:MenuElement({id = "DrawHP", name = "Draw Enemy Health Info", value = true})
+    self.XinZhaoMenu.Drawings:MenuElement({id = "DrawHPV", name = "Draw Enemy Health % Info", value = 70, min = 0, max = 100})
     
     self.XinZhaoMenu:MenuElement({id = "blank", type = SPACE, name = ""})
     self.XinZhaoMenu:MenuElement({id = "blank", type = SPACE, name = "Script Ver: " .. Version .. " - LoL Ver: " .. LVersion .. ""})
@@ -455,7 +485,7 @@ function XinZhao:LoadMenu()
 end
 
 function XinZhao:LoadSpells()
-    XinZhaoQ = {range = 250}
+    XinZhaoQ = {range = 375}
     XinZhaoW = {range = 900, speed = math.huge, delay = 0.5, radius = 45}
     XinZhaoE = {range = 650}
     XinZhaoR = {range = 550}
@@ -519,6 +549,35 @@ function XinZhao:Tick()
                 LocalControlKeyUp(HK_E)
                 LocalControlKeyUp(HK_LUS)
             elseif mylevel == 3 or mylevel == 4 or mylevel == 5 or mylevel == 7 or mylevel == 9 then
+                LocalControlKeyDown(HK_LUS)
+                LocalControlKeyDown(HK_W)
+                LocalControlKeyUp(HK_W)
+                LocalControlKeyUp(HK_LUS)
+            end
+        end
+    end
+
+    if self.XinZhaoMenu.AutoLevel.AutoLevel2:Value() then
+        local mylevel = myHero.levelData.lvl
+        local mylevelpts = myHero.levelData.lvlPts
+        
+        if mylevelpts > 0 then
+            if mylevel == 6 or mylevel == 11 or mylevel == 16 then
+                LocalControlKeyDown(HK_LUS)
+                LocalControlKeyDown(HK_R)
+                LocalControlKeyUp(HK_R)
+                LocalControlKeyUp(HK_LUS)
+            elseif mylevel == 1 or mylevel == 4 or mylevel == 5 or mylevel == 7 or mylevel == 9 then
+                LocalControlKeyDown(HK_LUS)
+                LocalControlKeyDown(HK_E)
+                LocalControlKeyUp(HK_E)
+                LocalControlKeyUp(HK_LUS)
+            elseif mylevel == 2 or mylevel == 8 or mylevel == 10 or mylevel == 12 or mylevel == 13 then
+                LocalControlKeyDown(HK_LUS)
+                LocalControlKeyDown(HK_Q)
+                LocalControlKeyUp(HK_Q)
+                LocalControlKeyUp(HK_LUS)
+            elseif mylevel == 3 or mylevel == 14 or mylevel == 15 or mylevel == 17 or mylevel == 18 then
                 LocalControlKeyDown(HK_LUS)
                 LocalControlKeyDown(HK_W)
                 LocalControlKeyUp(HK_W)
@@ -627,6 +686,28 @@ function XinZhao:KillSteal()
             end
         end
     end
+    if self.XinZhaoMenu.KillSteal.UseRH:Value() then
+        if GetItemSlot(myHero, 3074) > 0 then
+            for i, enemy in pairs(GetEnemyHeroes()) do
+                if ValidTarget(enemy, 380) and enemy.health + enemy.shieldAD < TiamatDMG() then
+                    if myHero:GetSpellData(GetItemSlot(myHero, 3074)).currentCd == 0 then
+                        Control.CastSpell(Item_HK[GetItemSlot(myHero, 3074)], enemy)
+                    end
+                end
+            end
+        end
+    end
+    if self.XinZhaoMenu.KillSteal.UseHG:Value() then
+        if GetItemSlot(myHero, 3146) > 0 then
+            for i, enemy in pairs(GetEnemyHeroes()) do
+                if ValidTarget(enemy, 700) and enemy.health + enemy.shieldAP < GunbladeDMG() then
+                    if myHero:GetSpellData(GetItemSlot(myHero, 3146)).currentCd == 0 then
+                        Control.CastSpell(Item_HK[GetItemSlot(myHero, 3146)], enemy)
+                    end
+                end
+            end
+        end
+    end
     if self.XinZhaoMenu.KillSteal.UseTH:Value() then
         if GetItemSlot(myHero, 3748) > 0 then
             for i, enemy in pairs(GetEnemyHeroes()) do
@@ -641,7 +722,7 @@ function XinZhao:KillSteal()
     if self.XinZhaoMenu.KillSteal.UseW:Value() then
         if IsReady(_W) then
             for i, enemy in pairs(GetEnemyHeroes()) do
-                if ValidTarget(enemy, XinZhaoW.range) and enemy.health + enemy.shieldAP < WDmg() then
+                if ValidTarget(enemy, XinZhaoW.range) and enemy.health + enemy.shieldAD < WDmg() then
                     LocalControlCastSpell(HK_W, enemy)
                 end
             end
@@ -659,7 +740,7 @@ function XinZhao:KillSteal()
     if self.XinZhaoMenu.KillSteal.UseQ:Value() then
         if IsReady(_Q) then
             for i, enemy in pairs(GetEnemyHeroes()) do
-                if ValidTarget(enemy, XinZhaoQ.range) and enemy.health + enemy.shieldAP < QDmg() then
+                if ValidTarget(enemy, XinZhaoQ.range) and enemy.health + enemy.shieldAD < QDmg() then
                     LocalControlCastSpell(HK_Q, enemy)
                 end
             end
@@ -668,7 +749,7 @@ function XinZhao:KillSteal()
     if self.XinZhaoMenu.KillSteal.UseR:Value() then
         if IsReady(_R) then
             for i, enemy in pairs(GetEnemyHeroes()) do
-                if ValidTarget(enemy, XinZhaoR.range) and enemy.health + enemy.shieldAP < self:RDmg(enemy) then
+                if ValidTarget(enemy, XinZhaoR.range) and enemy.health + enemy.shieldAD < self:RDmg(enemy) then
                     LocalControlCastSpell(HK_R, enemy)
                 end
             end
@@ -677,6 +758,8 @@ function XinZhao:KillSteal()
 end
 
 function XinZhao:Harass()
+
+    --print(myHero:GetSpellData(_Q).range)
     
     local targetW = GOS:GetTarget(XinZhaoW.range, "AD")
     
@@ -686,7 +769,7 @@ function XinZhao:Harass()
                 if IsReady(_W) then
                     if ValidTarget(targetW, XinZhaoW.range) then
                         local hitChance, aimPosition = HPred:GetHitchance(myHero.pos, targetW, XinZhaoW.range, XinZhaoW.delay, XinZhaoW.speed, XinZhaoW.radius, false)
-                        if hitChance and hitChance >= 1 then
+                        if hitChance and hitChance >= 2 then
                             --if GetMinionCollision(myHero.pos, aimPosition, AkaliE.radius) == 0 then
                             self:CastW(targetW, aimPosition)
                         --end
@@ -708,6 +791,56 @@ end
 
 function XinZhao:Combo()
     
+    local targetBC = GOS:GetTarget(550, "AP")
+    
+    if self.XinZhaoMenu.Combo.UseBC:Value() then
+        if GetItemSlot(myHero, 3144) > 0 and ValidTarget(targetBC, 550) then
+            if myHero:GetSpellData(GetItemSlot(myHero, 3144)).currentCd == 0 then
+                Control.CastSpell(Item_HK[GetItemSlot(myHero, 3144)], targetBC)
+            end
+        end
+    end
+    
+    local targetHG = GOS:GetTarget(700, "AP")
+    
+    if self.XinZhaoMenu.Combo.UseHG:Value() then
+        if GetItemSlot(myHero, 3146) > 0 and ValidTarget(targetHG, 700) then
+            if myHero:GetSpellData(GetItemSlot(myHero, 3146)).currentCd == 0 then
+                Control.CastSpell(Item_HK[GetItemSlot(myHero, 3146)], targetHG)
+            end
+        end
+    end
+
+    local targetTiamat = GOS:GetTarget(380, "AD")
+    
+    if self.XinZhaoMenu.Combo.UseT:Value() then
+        if GetItemSlot(myHero, 3077) > 0 and ValidTarget(targetTiamat, 380) then
+            if myHero:GetSpellData(GetItemSlot(myHero, 3077)).currentCd == 0 then
+                Control.CastSpell(Item_HK[GetItemSlot(myHero, 3077)], targetTiamat)
+            end
+        end
+    end
+    
+    local targetTHydra = GOS:GetTarget(380, "AD")
+    
+    if self.XinZhaoMenu.Combo.UseTH:Value() then
+        if GetItemSlot(myHero, 3748) > 0 and ValidTarget(targetTHydra, 380) then
+            if myHero:GetSpellData(GetItemSlot(myHero, 3748)).currentCd == 0 then
+                Control.CastSpell(Item_HK[GetItemSlot(myHero, 3748)], targetTHydra)
+            end
+        end
+    end
+
+    local targetRHydra = GOS:GetTarget(380, "AD")
+    
+    if self.XinZhaoMenu.Combo.UseRH:Value() then
+        if GetItemSlot(myHero, 3074) > 0 and ValidTarget(targetRHydra, 380) then
+            if myHero:GetSpellData(GetItemSlot(myHero, 3074)).currentCd == 0 then
+                Control.CastSpell(Item_HK[GetItemSlot(myHero, 3074)], targetRHydra)
+            end
+        end
+    end
+
     local targetE = GOS:GetTarget(XinZhaoE.range, "AP")
     
     if targetE then
@@ -730,7 +863,7 @@ function XinZhao:Combo()
                 if IsReady(_W) then
                     if ValidTarget(targetW, XinZhaoW.range) then
                         local hitChance, aimPosition = HPred:GetHitchance(myHero.pos, targetW, XinZhaoW.range, XinZhaoW.delay, XinZhaoW.speed, XinZhaoW.radius, false)
-                        if hitChance and hitChance >= 1 then
+                        if hitChance and hitChance >= 2 then
                             --if GetMinionCollision(myHero.pos, aimPosition, AkaliE.radius) == 0 then
                             self:CastW(targetW, aimPosition)
                         --end
@@ -784,7 +917,7 @@ function XinZhao:Combo()
     
     if self.XinZhaoMenu.Combo.UseRKS:Value() then
         if IsReady(_R) then
-            if ValidTarget(targetR, XinZhaoR.range) and targetR.health + targetR.shieldAP < self:RDmg(targetR) then
+            if ValidTarget(targetR, XinZhaoR.range) and targetR.health + targetR.shieldAD < self:RDmg(targetR) then
                 LocalControlCastSpell(HK_R, targetR)
             end
         end
@@ -834,6 +967,20 @@ function XinZhao:Clear()
                     if ValidTarget(minion, 380) then
                         if myHero:GetSpellData(GetItemSlot(myHero, 3748)).currentCd == 0 then
                             Control.CastSpell(Item_HK[GetItemSlot(myHero, 3748)], enemy)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if self.XinZhaoMenu.Clear.UseRH:Value() then
+        if GetItemSlot(myHero, 3074) > 0 then
+            for i = 1, LocalGameMinionCount() do
+                local minion = LocalGameMinion(i)
+                if minion and minion.isEnemy then
+                    if ValidTarget(minion, 380) then
+                        if myHero:GetSpellData(GetItemSlot(myHero, 3074)).currentCd == 0 then
+                            Control.CastSpell(Item_HK[GetItemSlot(myHero, 3074)], enemy)
                         end
                     end
                 end
@@ -937,6 +1084,27 @@ function XinZhao:Draw()
                     Draw.Text(tostring(enemy.charName) .. " Killable Skills (E+W+Q): ", 25, myHero.pos2D.x - 38, myHero.pos2D.y + 10, Draw.Color(0xFFFF0000))
                 elseif enemy.health < (EDmg() + WDmg() + QDmg() + self:RDmg(enemy)) then
                     Draw.Text(tostring(enemy.charName) .. " Killable Skills (E+W+Q+R): ", 25, myHero.pos2D.x - 38, myHero.pos2D.y + 10, Draw.Color(0xFFFF0000))
+                end
+            end
+        end
+        
+        if self.XinZhaoMenu.Drawings.DrawHP:Value() then
+            if ValidTarget(enemy) then
+                local targetHPV = self.XinZhaoMenu.Drawings.DrawHPV:Value()
+                if (enemy.health / enemy.maxHealth <= targetHPV / 100) then
+                    Draw.Text(tostring(enemy.charName) .. " Health %" .. tostring(targetHPV) .. " Info: ", 25, myHero.pos2D.x - 38, myHero.pos2D.y + 35, Draw.Color(0xFFFF0000))
+                end
+            end
+        end
+    end
+    
+    if self.XinZhaoMenu.Drawings.DrawTF:Value() then
+        for i, enemy in pairs(GetEnemyHeroes()) do
+            for j, ally in pairs(GetAllyHeroes()) do
+                if GetDistance(enemy.pos, ally.pos) < 380 then
+                    if ValidTarget(enemy) then
+                        Draw.Text(tostring(enemy.charName) .. " Team Fight Info: ", 25, myHero.pos2D.x - 38, myHero.pos2D.y + 60, Draw.Color(0xFFFF0000))
+                    end
                 end
             end
         end
